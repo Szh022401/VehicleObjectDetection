@@ -1,0 +1,34 @@
+names:
+- '0'
+- A
+- B
+- C
+- D
+- E
+- F
+- G
+- H
+- K
+- L
+- LicensePlate
+- M
+- N
+- P
+- R
+- S
+- T
+- U
+- V
+- X
+- Y
+- Z
+nc: 23
+roboflow:
+  license: CC BY 4.0
+  project: licence-plate-dausq
+  url: https://universe.roboflow.com/wspatentes/licence-plate-dausq/dataset/2
+  version: 2
+  workspace: wspatentes
+test: ../test/images
+train: licence-plate-2/train/images
+val: licence-plate-2/valid/images

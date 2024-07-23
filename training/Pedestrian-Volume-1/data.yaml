@@ -1,0 +1,12 @@
+names:
+- person
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: pedestrian-volume
+  url: https://universe.roboflow.com/nathan-marraccini-ikyyb/pedestrian-volume/dataset/1
+  version: 1
+  workspace: nathan-marraccini-ikyyb
+test: ../test/images
+train: Pedestrian-Volume-1/train/images
+val: Pedestrian-Volume-1/valid/images
