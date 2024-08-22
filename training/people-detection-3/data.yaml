@@ -1,0 +1,13 @@
+names:
+- pedestrian
+- people
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: people-detection-fwbyh
+  url: https://universe.roboflow.com/people-detection-o3dn2/people-detection-fwbyh/dataset/3
+  version: 3
+  workspace: people-detection-o3dn2
+test: ../test/images
+train: people-detection-3/train/images
+val: people-detection-3/valid/images
