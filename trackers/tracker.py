@@ -5,7 +5,7 @@ from yolov7.models.experimental import attempt_load
 from yolov7.utils.general import non_max_suppression, scale_coords
 from yolov7.utils.datasets import letterbox
 from yolov7.utils.torch_utils import select_device
-from utils import get_center_of_box, get_box_width, get_foot_position
+from utils import get_center_of_box, get_box_width, get_car_position
 import supervision as sv
 import pickle
 import cv2
@@ -71,17 +71,22 @@ class Tracker:
             for frame_num, track in enumerate(object_track):
                 for track_id, track_info in track.items():
                     box = track_info['box']
-                    if objects == 'ball':
+                    if objects == 'licence_plate':
                         position = get_center_of_box(box)
                     else:
-                        position = get_foot_position(box)
+                        position = get_car_position(box)
                     tracks[objects][frame_num][track_id]['position'] = position
+                    print(tracks[objects][frame_num][track_id]['position'])
 
     def detect(self, frames):
         batch_size = 20
         img_size = 640
         stride = 32
-        conf_thres = 0.3
+        conf_thres_dict = {
+            'car': 0.8,
+            'licence_plate': 0.8,
+            'people': 0.3
+        }
         iou_thres = 0.5
         detections = {'car': [], 'licence_plate': [], 'people': []}
 
@@ -94,13 +99,15 @@ class Tracker:
                 imgs = torch.from_numpy(imgs).to(self.device)
                 imgs = imgs.float()
                 imgs /= 255.0
+
                 if imgs.ndimension() == 3:
                     imgs = imgs.unsqueeze(0)
 
                 with torch.no_grad():
                     pred = model(imgs, augment=False)[0]
 
-                pred = non_max_suppression(pred, conf_thres, iou_thres, classes=None, agnostic=False)
+                pred = non_max_suppression(pred, conf_thres=min(conf_thres_dict.values()), iou_thres=iou_thres,
+                                           classes=None, agnostic=False)
 
                 for j, det in enumerate(pred):
                     frame_detections = []
@@ -109,12 +116,15 @@ class Tracker:
                     if len(det):
                         det[:, :4] = scale_coords(imgs.shape[2:], det[:, :4], frame.shape).round()
                         for *xyxy, conf, cls in reversed(det):
+                            cls_name = 'car' if cls == 0 else 'licence_plate' if cls == 1 else 'people'
+                            conf_thres = conf_thres_dict[cls_name]
                             if conf >= conf_thres:
                                 xyxy = [int(x.item()) for x in xyxy]
                                 frame_detections.append((xyxy, conf.item(), cls.item()))
                                 print(f"Model: {model_name}, Box: {xyxy}, Conf: {conf}, Class: {cls}")
                     detections[model_name].append(frame_detections)
-
+                    print(f"Frame {i + j}: {model_name} detections: {frame_detections}")
+        print(f"Final detections: {detections}")
         return detections
 
     def get_objects(self, frames, read_from_stub=False, stub_path=None):
@@ -180,8 +190,8 @@ class Tracker:
 
             for track_id, licence_info in licence_dict.items():
                 box = licence_info['box']
-                color = licence_info.get('color', (255, 0, 255))
-                frame = self.draw_ellipses(frame, box, color, track_id)
+                color = licence_info.get('color', (0, 0, 0))
+                cv2.rectangle(frame, box, color, track_id)
 
             output_video_frames.append(frame)
             print(
